@@ -1,0 +1,58 @@
+""""""
+
+from passenger import Passenger
+
+from queues import PassengerQueue
+
+
+class Simulation(object):
+    def __init__(self, airplane, queue_type: PassengerQueue, max_iter=1000):
+        self.plane = airplane
+        self.passengers = []
+        self.queue = queue_type(
+            [Passenger(row, seat) for row, seat in self.plane.seats])
+
+        self.max_iter = max_iter
+
+        self.seat_shuffles = 0
+        self.passengers_seated_each_step = []
+        self.steps = 0
+
+    def next_passenger(self) -> Passenger:
+        return next(self.queue)
+
+    def step(self):
+        self.passengers_seated_each_step.append(0)
+        # all passengers move, if they arrive at their seat, they sit down
+        for passenger in self.passengers:
+            passenger.move()
+
+            if passenger.arrived_at_row:
+                self.seat_shuffles += min(
+                    [1, self.plane.seat_passenger(passenger)])
+                self.passengers_seated_each_step[-1] += 1
+
+        # board a new passenger until all are on the plane
+        try:
+            passenger = self.next_passenger()
+            passenger.board()
+            self.passengers.append(passenger)
+        except StopIteration:
+            pass
+
+        self.steps += 1
+
+    def run(self):
+        while not self.plane.fully_boarded and self.steps < self.max_iter:
+            self.step()
+
+        number_of_stops = sum([
+            1 if seated > 0 else 0
+            for seated in self.passengers_seated_each_step
+        ])
+        return {
+            'number of steps': self.steps,
+            'number of stops': number_of_stops,
+            'number of seat shuffles': self.seat_shuffles,
+            'number of passengers seated': sum(self.passengers_seated_each_step)
+        }
