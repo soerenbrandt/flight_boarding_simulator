@@ -1,16 +1,13 @@
 """"""
 
-from passenger import Passenger
-
 from queues import PassengerQueue
 
 
 class Simulation(object):
     def __init__(self, airplane, queue_type: PassengerQueue, max_iter=1000):
         self.plane = airplane
-        self.passengers = []
-        self.queue = queue_type(
-            [Passenger(row, seat) for row, seat in self.plane.seats])
+        self.passengers_on_the_plane = []
+        self.queue = queue_type(airplane)
 
         self.max_iter = max_iter
 
@@ -18,13 +15,13 @@ class Simulation(object):
         self.passengers_seated_each_step = []
         self.steps = 0
 
-    def next_passenger(self) -> Passenger:
+    def next_passenger(self):
         return next(self.queue)
 
     def step(self):
         self.passengers_seated_each_step.append(0)
         # all passengers move, if they arrive at their seat, they sit down
-        for passenger in self.passengers:
+        for passenger in self.passengers_on_the_plane:
             passenger.move()
 
             if passenger.arrived_at_row:
@@ -36,7 +33,7 @@ class Simulation(object):
         try:
             passenger = self.next_passenger()
             passenger.board()
-            self.passengers.append(passenger)
+            self.passengers_on_the_plane.append(passenger)
         except StopIteration:
             pass
 

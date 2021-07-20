@@ -8,6 +8,15 @@ class Passenger(object):
 
         self.current_row = None
 
+    def __lt__(self, other):
+        if self.row < other.row:
+            return True
+        elif self.row == other.row and self.seat < other.seat:
+            return True
+
+    def __gt__(self, other):
+        return not self < other
+
     @property
     def arrived_at_row(self) -> bool:
         return self.current_row == self.target_row
