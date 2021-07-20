@@ -1,29 +1,31 @@
 """"""
 
+from airplane import Seat
+
 
 class Passenger(object):
-    def __init__(self, row: int, seat: int):
-        self.target_row = row
-        self.seat = seat
+    def __init__(self, seat: Seat):
+        self._seat = seat
 
         self.current_row = None
 
     def __lt__(self, other):
-        if self.row < other.row:
-            return True
-        elif self.row == other.row and self.seat < other.seat:
-            return True
+        return self._seat < other._seat
 
     def __gt__(self, other):
-        return not self < other
-
-    @property
-    def arrived_at_row(self) -> bool:
-        return self.current_row == self.target_row
+        return self._seat > other._seat
 
     @property
     def row(self):
-        return self.target_row
+        return self._seat.row
+
+    @property
+    def seat(self):
+        return self._seat.seat
+
+    @property
+    def arrived_at_row(self) -> bool:
+        return self.current_row == self.row
 
     def board(self) -> None:
         """Sets the row counter to -1 so that the next row is row 0."""

@@ -6,16 +6,17 @@ import math
 import random
 
 from passenger import Passenger
+from airplane import Airplane
 
 
 class PassengerQueue(ABC):
-    def __init__(self, plane):
-        self.passengers = [Passenger(row, seat) for row, seat in plane.seats]
+    def __init__(self, plane: Airplane):
+        self.passengers = [Passenger(seat) for seat in plane.seats]
 
     def __iter__(self):
         return self
 
-    def __next__(self):
+    def __next__(self) -> Passenger:
         if len(self.passengers) > 0:
             return self.select_passenger()
         else:
@@ -52,7 +53,7 @@ class GroupedBoarding(ABC):
 
 
 class FrontToBack(PassengerQueue, GroupedBoarding):
-    def __init__(self, plane, groups=30):
+    def __init__(self, plane: Airplane, groups=30):
         PassengerQueue.__init__(self, plane)
 
         # sort passengers (to be sure)
@@ -68,7 +69,7 @@ class FrontToBack(PassengerQueue, GroupedBoarding):
 
 
 class BackToFront(PassengerQueue, GroupedBoarding):
-    def __init__(self, plane, groups=30):
+    def __init__(self, plane: Airplane, groups=30):
         PassengerQueue.__init__(self, plane)
 
         # invert order of passengers
@@ -84,7 +85,7 @@ class BackToFront(PassengerQueue, GroupedBoarding):
 
 
 class Random(PassengerQueue):
-    def __init__(self, plane):
+    def __init__(self, plane: Airplane):
         super().__init__(plane)
         random.shuffle(self.passengers)
 
@@ -93,7 +94,7 @@ class Random(PassengerQueue):
 
 
 class WindowMiddleAisle(PassengerQueue, GroupedBoarding):
-    def __init__(self, plane, shuffle_groups=True):
+    def __init__(self, plane: Airplane, shuffle_groups=True):
         # sort passengers by window, middle, aisle
         PassengerQueue.__init__(self, plane)
 
@@ -130,7 +131,7 @@ class WindowMiddleAisle(PassengerQueue, GroupedBoarding):
 
 
 class Steffen(PassengerQueue, GroupedBoarding):
-    def __init__(self, plane, perfect=False):
+    def __init__(self, plane: Airplane, perfect=False):
         # sort passengers by window, middle, aisle
         PassengerQueue.__init__(self, plane)
 

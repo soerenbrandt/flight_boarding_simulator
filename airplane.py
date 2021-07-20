@@ -1,5 +1,35 @@
 """"""
 
+SEAT_TYPES = ['window', 'middle', 'aisle']
+
+
+class Seat(object):
+    def __init__(self, row, seat, window_middle_aisle):
+        self.row = row
+        self.seat = seat
+        if window_middle_aisle in SEAT_TYPES:
+            self.type = window_middle_aisle
+        else:
+            raise ValueError(f'Invalid seat type. Must be in {SEAT_TYPES}')
+
+    def __lt__(self, other):
+        # window < middle < aisle (reverse alphabetical)
+        if self.row < other.row:
+            return True
+        elif self.row == other.row and self.type > other.type:
+            return True
+        elif self.row == other.row and self.seat < other.seat:
+            return True
+
+    def __gt__(self, other):
+        # window < middle < aisle (reverse alphabetical)
+        if self.row > other.row:
+            return True
+        elif self.row == other.row and self.type < other.type:
+            return True
+        elif self.row == other.row and self.seat > other.seat:
+            return True
+
 
 class Airplane(object):
     def __init__(self, number_of_rows: int, seats_per_row: int):
@@ -15,14 +45,18 @@ class Airplane(object):
         Returns:
             tuple: (row, seat) for each seat on the plane
         """
-        seats = list(range(self.seats_per_row))
-        seats_window_to_aisle = seats[:self._aisle] + seats[self._aisle:][::-1]
-        return ((row, seat) for row in range(self.number_of_rows)
-                for seat in seats_window_to_aisle)
+        for row in range(self.number_of_rows):
+            for seat in list(range(self.seats_per_row)):
+                if seat in self.window_seats:
+                    yield Seat(row, seat, 'window')
+                elif seat in self.aisle_seats:
+                    yield Seat(row, seat, 'aisle')
+                else:
+                    yield Seat(row, seat, 'middle')
 
     @property
     def window_seats(self):
-        return {0, self._aisle}
+        return {0, self.seats_per_row - 1}
 
     @property
     def middle_seats(self):
@@ -34,7 +68,7 @@ class Airplane(object):
 
     @property
     def aisle_seats(self):
-        return {self._aisle - 1, self.seats_per_row - 1}
+        return {self._aisle - 1, self._aisle}
 
     @property
     def fully_boarded(self) -> bool:
@@ -66,7 +100,7 @@ class Airplane(object):
         else:
             # passenger sits on the right side of the plane
             side = self.seating_chart[passenger.row][aisle:]
-            return sum(side[:aisle - 1 - passenger.seat])
+            return sum(side[:passenger.seat - aisle + 1])
 
     def seat_passenger(self, passenger) -> int:
         """Change seating for passenger seat to 1 (occupied).
@@ -82,8 +116,7 @@ class Airplane(object):
             self.seating_chart[passenger.row][passenger.seat] = 1
         else:
             # start seating passengers from the window
-            self.seating_chart[passenger.row][self._aisle - 1 -
-                                              passenger.seat] = 1
+            self.seating_chart[passenger.row][passenger.seat] = 1
         return required_shuffles
 
     def _generate_seating_chart(self) -> list:
@@ -99,9 +132,9 @@ class Airplane(object):
             seat#  1  1  1  1  1  1  1  1  1  1  1  1 ...
             seat#  2  2  2  2  2  2  2  2  2  2  2  2 ...
                                middle aisle
-            seat#  5  5  5  5  5  5  5  5  5  5  5  5 ...
-            seat#  4  4  4  4  4  4  4  4  4  4  4  4 ...
             seat#  3  3  3  3  3  3  3  3  3  3  3  3 ...
+            seat#  4  4  4  4  4  4  4  4  4  4  4  4 ...
+            seat#  5  5  5  5  5  5  5  5  5  5  5  5 ...
                   ------------------------------------
 
         Returns:
