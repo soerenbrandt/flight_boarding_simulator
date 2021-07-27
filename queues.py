@@ -1,4 +1,29 @@
-""""""
+"""Queues define how passengers will enter the plane. There are two superclasses:
+PassengerQueue and GroupedBoarding. Most queues are divided into boarding groups
+but not all have to be (e.g. Random boarding).
+
+Usage:
+    Boarding groups are generated from the seating chart of the airplane.
+
+    from airplane import Airplane
+    from queues import *
+
+    plane = Airplane(number_of_rows=30, seats_per_row=6)
+
+    <PassengerQueue>(plane, **kwargs)
+
+The passenger queues currently implemented are:
+- FrontToBack
+- BackToFront
+- Random
+- WindowMiddleAisle
+- Steffen
+
+The kwargs for some of these groups include:
+- number_of_boarding_groups (for GroupedBoarding: FrontToBack, BackToFront)
+- shuffle_groups (for GroupedBoarding: FrontToBack, BackToFront, WindowMiddleAisle)
+- perfect (for Steffen only, opposite of shuffle_groups)
+"""
 
 from abc import ABC, abstractmethod
 from itertools import chain, cycle
@@ -10,7 +35,12 @@ from airplane import Airplane
 
 
 class PassengerQueue(ABC):
-    def __init__(self, plane: Airplane):
+    def __init__(self, plane: Airplane) -> None:
+        """Defines the PassengerQueue.
+
+        Args:
+            plane (Airplane): Airplane that generates Seats for passengers
+        """
         self.passengers = [Passenger(seat) for seat in plane.seats]
 
     def __iter__(self):
@@ -24,14 +54,25 @@ class PassengerQueue(ABC):
 
     @abstractmethod
     def select_passenger(self):
+        """Generates the order in which passengers board the plane. Must define
+        a method that also remove the passenger from the list when boarding.
+        """
         pass
 
 
 class GroupedBoarding(ABC):
     def __init__(self,
-                 passengers,
-                 number_of_boarding_groups=4,
-                 shuffle_groups=True):
+                 passengers: Passenger,
+                 number_of_boarding_groups: int = 4,
+                 shuffle_groups: bool = True) -> None:
+        """Adds boarding groups to a passenger queue.
+
+        Args:
+            passengers (Passenger)
+            number_of_boarding_groups (int, optional): Defaults to 4.
+            shuffle_groups (bool, optional): If True, passengers within a group
+                board in random order. Defaults to True.
+        """
         self.passengers = passengers
         self.number_of_boarding_groups = number_of_boarding_groups
         self.shuffle_groups = shuffle_groups
@@ -53,39 +94,74 @@ class GroupedBoarding(ABC):
 
 
 class FrontToBack(PassengerQueue, GroupedBoarding):
-    def __init__(self, plane: Airplane, groups=30):
+    def __init__(self,
+                 plane: Airplane,
+                 groups: int = None,
+                 shuffle_groups: bool = True) -> None:
+        """Rows board in increasing order but passengers within each row board
+        in random order.
+
+        Args:
+            plane (Airplane)
+            groups (int, optional): The number of groups. By default, uses group
+                per row in the plane. Defaults to None.
+            shuffle_groups (bool, optional): If True, passengers within a group
+                board in random order. Defaults to True.
+        """
         PassengerQueue.__init__(self, plane)
 
         # sort passengers (to be sure)
         self.passengers.sort()
 
+        if groups is None:
+            groups = plane.number_of_rows
         GroupedBoarding.__init__(self,
                                  self.passengers,
                                  number_of_boarding_groups=groups,
-                                 shuffle_groups=True)
+                                 shuffle_groups=shuffle_groups)
 
     def select_passenger(self):
         return self.passengers.pop(0)
 
 
 class BackToFront(PassengerQueue, GroupedBoarding):
-    def __init__(self, plane: Airplane, groups=30):
+    def __init__(self,
+                 plane: Airplane,
+                 groups: int = None,
+                 shuffle_groups: bool = True) -> None:
+        """Rows board in increasing order but passengers within each row board
+        in random order.
+
+        Args:
+            plane (Airplane)
+            groups (int, optional): The number of groups. By default, uses group
+                per row in the plane. Defaults to None.
+            shuffle_groups (bool, optional): If True, passengers within a group
+                board in random order. Defaults to True.
+        """
         PassengerQueue.__init__(self, plane)
 
         # invert order of passengers
         self.passengers.sort(reverse=True)
 
+        if groups is None:
+            groups = plane.number_of_rows
         GroupedBoarding.__init__(self,
                                  self.passengers,
                                  number_of_boarding_groups=groups,
-                                 shuffle_groups=True)
+                                 shuffle_groups=shuffle_groups)
 
     def select_passenger(self):
         return self.passengers.pop(0)
 
 
 class Random(PassengerQueue):
-    def __init__(self, plane: Airplane):
+    def __init__(self, plane: Airplane) -> None:
+        """Passengers board in entirely random order
+
+        Args:
+            plane (Airplane)
+        """
         super().__init__(plane)
         random.shuffle(self.passengers)
 
@@ -94,7 +170,15 @@ class Random(PassengerQueue):
 
 
 class WindowMiddleAisle(PassengerQueue, GroupedBoarding):
-    def __init__(self, plane: Airplane, shuffle_groups=True):
+    def __init__(self, plane: Airplane, shuffle_groups: bool = True) -> None:
+        """Passengers are divided into 6 groups: both side for each for window,
+        middle, and aisle.
+
+        Args:
+            plane (Airplane)
+            shuffle_groups (bool, optional): If True, passengers within a group
+                board in random order. Defaults to True.
+        """
         # sort passengers by window, middle, aisle
         PassengerQueue.__init__(self, plane)
 
@@ -131,7 +215,22 @@ class WindowMiddleAisle(PassengerQueue, GroupedBoarding):
 
 
 class Steffen(PassengerQueue, GroupedBoarding):
-    def __init__(self, plane: Airplane, perfect=False):
+    def __init__(self, plane: Airplane, perfect: bool = False) -> None:
+        """Steffen is a highly efficient boarding approach combining different
+        boarding approaches.
+
+        There are two types of Steffen boarding: modified and perfect. In perfect
+        Steffen boarding, passengers are perfectly ordered both back-to-front
+        and window-middle-aisle.
+        In modified Steffen, passengers are sorted into 4 boarding groups:
+        Alternating rows on alternating sides. Within each group, passengers
+        are again randomized.
+
+        Args:
+            plane (Airplane)
+            perfect (bool, optional): If True, perfect Steffen is used, else
+                modified Steffen. Defaults to False.
+        """
         # sort passengers by window, middle, aisle
         PassengerQueue.__init__(self, plane)
 

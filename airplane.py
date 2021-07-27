@@ -1,10 +1,35 @@
-""""""
+"""Airplanes are defined by two classes: Airplane and Seat.
+
+Each spot on the plane has a corresponding seat that can be assigned to the
+passengers. Each seats is identified by the row and seat number which is set by
+the Airplane seat map while Seats also have a window-middle-aisle property which
+allows them to be sorted in order.
+
+The Airplane class generates the seat map and tracks which seats are occupied.
+
+Usage:
+    from airplane import Airplane, Seat
+
+    plane = Airplane(number_of_rows=30, seats_per_row=6)
+    seat = Seat(row=10, seat=1, window_middle_aisle='middle')
+"""
 
 SEAT_TYPES = ['window', 'middle', 'aisle']
 
 
 class Seat(object):
-    def __init__(self, row, seat, window_middle_aisle):
+    def __init__(self, row: int, seat: int, window_middle_aisle: str) -> None:
+        """Airplane seats sortable in order.
+
+        Args:
+            row (int)
+            seat (int)
+            window_middle_aisle (str): String identifying the seat_type, e.g.
+                'window', 'middle', or 'aisle'.
+
+        Raises:
+            ValueError: if the seat_type is illdefined
+        """
         self.row = row
         self.seat = seat
         if window_middle_aisle in SEAT_TYPES:
@@ -32,7 +57,13 @@ class Seat(object):
 
 
 class Airplane(object):
-    def __init__(self, number_of_rows: int, seats_per_row: int):
+    def __init__(self, number_of_rows: int, seats_per_row: int) -> None:
+        """Airplane class that defines the seating arangement
+
+        Args:
+            number_of_rows (int)
+            seats_per_row (int): Each row is split in half by a central aisle.
+        """
         self.number_of_rows = number_of_rows
         self.seats_per_row = seats_per_row
 
@@ -55,11 +86,19 @@ class Airplane(object):
                     yield Seat(row, seat, 'middle')
 
     @property
-    def window_seats(self):
+    def window_seats(self) -> set:
+        """
+        Returns:
+            set: window seat numbers
+        """
         return {0, self.seats_per_row - 1}
 
     @property
-    def middle_seats(self):
+    def middle_seats(self) -> set:
+        """
+        Returns:
+            set: all seat numbers that are not window or aisle seats
+        """
         seats = set(range(self.seats_per_row))
         # remove window and aisle seats
         seats -= self.window_seats
@@ -67,7 +106,11 @@ class Airplane(object):
         return seats
 
     @property
-    def aisle_seats(self):
+    def aisle_seats(self) -> set:
+        """
+        Returns:
+            set: aisle seat numbers
+        """
         return {self._aisle - 1, self._aisle}
 
     @property

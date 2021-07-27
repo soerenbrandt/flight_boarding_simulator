@@ -1,10 +1,47 @@
-""""""
+"""This is a simplified simulation method that performs the boarding sequence
+according to a PassengerQueue.
 
+The simulation performs a single step in which each passenger on the plane moves
+one row. If passengers reach their target row, all of them get seated at the
+same time which is recorded as a stop.
+
+Usage:
+    from airplane import Airplane
+    from passenger import Passenger
+    from simulation import Simulation
+    from queues import FrontToBack
+
+    ROWS = 30
+    SEATS_PER_ROW = 6
+
+    airplane = Airplane(number_of_rows=ROWS, seats_per_row=SEATS_PER_ROW)
+    sim = Simulation(airplane, FrontToBack, max_iter=1000)
+    sim.run()
+
+Note: In order to change kwargs passed to the PassengerQueue, I use partial, e.g.:
+
+    from functools import partial
+
+    NewFrontToBack = partial(FrontToBack, groups=10)
+"""
+
+from airplane import Airplane
+from passenger import Passenger
 from queues import PassengerQueue
 
 
 class Simulation(object):
-    def __init__(self, airplane, queue_type: PassengerQueue, max_iter=1000):
+    def __init__(self,
+                 airplane: Airplane,
+                 queue_type: PassengerQueue,
+                 max_iter: int = 1000) -> None:
+        """Simulation object that oversees the boarding process.
+
+        Args:
+            airplane (Airplane)
+            queue_type (PassengerQueue)
+            max_iter (int, optional): Maximume number of steps. Defaults to 1000.
+        """
         self.plane = airplane
         self.passengers_on_the_plane = []
         self.queue = queue_type(airplane)
@@ -15,10 +52,19 @@ class Simulation(object):
         self.passengers_seated_each_step = []
         self.steps = 0
 
-    def next_passenger(self):
+    def next_passenger(self) -> Passenger:
         return next(self.queue)
 
-    def step(self):
+    def step(self) -> None:
+        """Performs a simulation step.
+
+        Each step has two parts:
+            1) All passengers move one row and sit if they have reached their
+               target row. If any passenger sits down, a stop is recorded and
+               all steps passengers that reached their target row sit down
+               during the same stop.
+            2) One new passenger enters the plane.
+        """
         self.passengers_seated_each_step.append(0)
         # all passengers move, if they arrive at their seat, they sit down
         for passenger in self.passengers_on_the_plane:
@@ -39,7 +85,19 @@ class Simulation(object):
 
         self.steps += 1
 
-    def run(self):
+    def run(self) -> dict:
+        """Run the simulation until the plane is full or max_iter is reached.
+
+        Returns:
+            dict: {
+                    'number of steps': number of simulation steps,
+                    'number of stops': number of stops when passengers sit down,
+                    'number of seat shuffles': seat shuffles that require
+                        passengers to get up,
+                    'number of passengers seated': number of passengers that got
+                        seated (also the number of seats)
+                   }
+        """
         while not self.plane.fully_boarded and self.steps < self.max_iter:
             self.step()
 
