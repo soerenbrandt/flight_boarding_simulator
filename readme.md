@@ -32,7 +32,7 @@ For visualization I used the following packages.
 
 In `èxample_simulations.ipynb` I collated example simulations for the boarding methods discussed in CGP Grey's video: front-to-back, back-to-front, random, window-middle-aisle, modified Steffen, and perfect Steffen.
 
-For the examples here I used a single-aisle plain with 30 rows and 6 seats per row (window-middle-aisle on either side). I did not include a first-class in the plane for simplicity. Each simulation is run 100 times and the results are plotted using 
+For the examples here I used a single-aisle plain with 30 rows and 6 seats per row (window-middle-aisle on either side). I did not include a first-class in the plane for simplicity. Each simulation is run 100 times and the results are plotted using
 
 #### Front-to-Back
 
@@ -71,3 +71,11 @@ As mentioend above, Steffen is an ideal boarding method that is theoretically mo
 ![Steffen_perfect](examples/steffen_perfect.png)
 
 
+### Final thoughts
+
+In the video, modified Steffen is depicted as though people are sorted and board back to front. I decided to board people in random order which seems closer to the originally proposed method to address "human imperfections" ([wiki](https://en.wikipedia.org/wiki/Steffen_Boarding_Method#Criticism)).
+
+I also ignored several features of real-world boarding that may decrease or increase more realistic boarding times:
+- no groups: each passenger boards independently. In the real world, friends, families, colleagues would frequently board the plane together.
+- moving through the plane takes no time. While the number of steps is given, I decided to ignore the time required to move in the analysis. This would especially effect the magnitude in difference between perfect Steffen and the other methods
+- I also ignored first-class and early boarding to simplify the simulation
